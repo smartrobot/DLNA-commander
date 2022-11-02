@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"
+xmlns:arib="urn:schemas-arib-or-jp:elements-1-0/"
+xmlns:av="urn:schemas-sony-com:av">
+<item id="-1" parentID="-1" restricted="1"><dc:title>{title}</dc:title><upnp:class>object.item.audioItem</upnp:class><res  duration="{duration}" size="{file_size}" resolution="{width}x{height}" bitrate="{bitrate}" protocolInfo="http-get:*:{mimetype}:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01500000000000000000000000000000">{url}</res></item></DIDL-Lite>

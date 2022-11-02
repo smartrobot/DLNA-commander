@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+plexapi = "*"
+filetype = "*"
+pymediainfo = "*"
+fastapi-utils = "*"
+xmltodict = "*"
+websockets = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
+
+[packages.uvicorn]
+extras = [ "standard",]

@@ -1,0 +1,8 @@
+{
+"plex_baseurl":"",
+"plex_token" : "",
+"local_movie_path" : "",
+"plex_moviePath" :"",
+"nginx_file_server_url" : "",
+"selected_device" : ""
+}
