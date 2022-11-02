@@ -35,16 +35,20 @@ Create new site config
 
 "nginx_file_server_url" : "someIP:somePort/movies",
 
-### The url to your dlna device
+### The url to your dlna device control xml
 
 "selected_device" : ""
 
 ## Instal deps
 
-Install pipenv
++ Install pipenv
 
 pipenv install
 
 ## Run
+pipenv shell 
+python dev_server.py
 
-pipenv python dev_server.py
+or
+
+pipenv run python dev_server.py
