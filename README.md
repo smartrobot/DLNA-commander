@@ -2,7 +2,22 @@
 
 DLNA commander
 
-fill out settings.json
+# To do
+
+Create docker for deployment
+
+## Setup Nginx
+
+Add these headers and mimetpyes to nginx.conf:
++ some header (will update with proper config)
++ Some header (will update with proper config)
++ add updated mimetypes (will update with proper config)
+
+Create new site config
++ Add static UI build to / url
++ Add your movies directory as static files to /movies
+
+## fill out settings.json
 
 ### Plex api config
 
@@ -18,14 +33,18 @@ fill out settings.json
 
 ### The root url of your movies served by nginx
 
-"nginx_file_server_url" : "",
+"nginx_file_server_url" : "someIP:somePort/movies",
 
 ### The url to your dlna device
 
 "selected_device" : ""
 
+## Instal deps
+
 Install pipenv
 
 pipenv install
+
+## Run
 
 pipenv python dev_server.py
