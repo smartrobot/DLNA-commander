@@ -6,11 +6,15 @@ DLNA commander
 
 Create docker for deployment
 
+# Install
++ clone and build web ui https://github.com/smartrobot/DLNA-commander-UI
+
 ## Setup Nginx
 
 Add these headers and mimetpyes to nginx.conf:
-+ some header (will update with proper config)
-+ Some header (will update with proper config)
++ contentFeatures.dlna.org : DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01500000000000000000000000000000
++ transferMode.dlna.org : Streaming
++ Server : UPnP/1.0 DLNADOC/1.50 Platinum/1.0.5.13
 + add updated mimetypes (will update with proper config)
 
 Create new site config

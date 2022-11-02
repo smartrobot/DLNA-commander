@@ -5,9 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
 from pydantic import BaseModel
 from .nanodlna import dlna, devices
-import signal
-import logging
-import os
 import urllib.parse
 from pymediainfo import MediaInfo
 import requests
@@ -83,9 +80,9 @@ libraryItems = []
 #CORS
 origins = [
     "*",
-    #"http://localhost",
-    #"http://localhost:8080",
-    #"http://localhost:8000",
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:8000"
 ]
 
 app.add_middleware(
@@ -96,25 +93,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def build_handler_stop(device):
-    def signal_handler(sig, frame):
-
-        logging.info("Interrupt signal detected")
-
-        logging.info("Sending stop command to render device")
-        dlna.stop(device)
-
-        logging.info("Stopping streaming server")
-        streaming.stop_server()
-
-        sys.exit(
-            "Interrupt signal detected. "
-            "Sent stop command to render device and "
-            "stopped streaming. "
-            "nano-dlna will exit now!"
-        )
-    return signal_handler
-
+#Websocket route
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await notifier.connect(websocket)
@@ -125,10 +104,12 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         notifier.remove(websocket)
 
+#Create a notifier for the websockets
 @app.on_event("startup")
 async def startup():
     await notifier.generator.asend(None)
 
+#Build library on startup
 @app.on_event("startup")
 async def build_library():
     for e,video in enumerate(movies.search()):
@@ -155,6 +136,7 @@ async def build_library():
 @app.on_event("startup")
 @repeat_every(seconds=1)
 async def pushUpdate():
+    #Push updates via websockets
     device = devices.register_device(settings["selected_device"])
     position = dlna.getPos(device)
     uri = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['TrackURI']
@@ -171,46 +153,49 @@ async def root():
 
 @app.post("/play")
 async def play(play: Play):
-    devs = devices.get_devices()
+    print(play.device)
+    try:
+        device = devices.register_device(play.device)
+        dlna.stop(device) #Just send stop to what ever its doing actully checking is going to take longer
 
-    device = devices.register_device(play.device)
-
-    #Stop what ever the deivce is currently playing
-    dlna.stop(device)
-
+    except:
+        return {"Error": "Could not connect to device"}
+ 
     #Build metadata
-    media_info = MediaInfo.parse(play.file_path.replace(settings["plex_moviePath"], settings["local_movie_path"]))\
+    try:
+        media_info = MediaInfo.parse(play.file_path.replace(settings["plex_moviePath"], settings["local_movie_path"]))\
     
-    video_tracks = []
-    general_info = []
-    for track in media_info.tracks:
+        video_tracks = []
+        general_info = []
+        for track in media_info.tracks:
 
-        if track.track_type == "Video":
-           video_tracks.append(track)
-        elif track.track_type == "General":
-            general_info.append(track)
+            if track.track_type == "Video":
+                video_tracks.append(track)
+            elif track.track_type == "General":
+                general_info.append(track)
 
-    #Replace all illegal chars in title
-    title = play.title.replace("&", "and")
+        #Replace all illegal chars in title
+        title = play.title.replace("&", "and")
 
-    #create metadata dictionary
-    meta_data = {
-        "title": title,
-        "duration" : datetime.timedelta(milliseconds=float(video_tracks[0].duration)),
-        "file_size" : general_info[0].file_size,
-        "width" : video_tracks[0].width,
-        "height" : video_tracks[0].height,
-        "bitrate" : video_tracks[0].bit_rate,
-        "mimetype" : requests.head(play.videoUrl).headers['Content-Type'],
-        "url": play.videoUrl
-    }
-
-    # Register handler if interrupt signal is received
-    signal.signal(signal.SIGINT, build_handler_stop(device))
+        #create metadata dictionary
+        meta_data = {
+            "title": title,
+            "duration" : datetime.timedelta(milliseconds=float(video_tracks[0].duration)),
+            "file_size" : general_info[0].file_size,
+            "width" : video_tracks[0].width,
+            "height" : video_tracks[0].height,
+            "bitrate" : video_tracks[0].bit_rate,
+            "mimetype" : requests.head(play.videoUrl).headers['Content-Type'],
+            "url": play.videoUrl
+        }
+    except:
+        return {"error":"Could not parse mediainfo and build metadata"}
 
     #Play the requested File
-    print(f"Playing: {play.videoUrl}")
-    dlna.play({"file_video":play.videoUrl}, device, meta_data)
+    try:
+        dlna.play({"file_video":play.videoUrl}, device, meta_data)
+    except:
+        return {"Error":"Could not start playback"}
 
     #return playing
     return { 'Playing' : 'true'}
@@ -222,11 +207,9 @@ async def findDevices():
 
 @app.post("/seek")
 async def seek(seek: Seek):
-    print(seek.device)
     device = devices.register_device(seek.device)
-    print({"target": seek.target})
     dlna.seek(device, {"target": seek.target})
-    return
+    return None
 
 @app.get("/getPos")
 async def getPos(dev: Dev):
@@ -238,7 +221,6 @@ async def getPos(dev: Dev):
 async def getTransportStatus(dev: Dev):
     device = devices.register_device(dev.device)
     data = dlna.GetTransportInfo(device)
-    print(data)
     return {'transportStatus': data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']}
 
 @app.post('/playPause')
@@ -246,14 +228,21 @@ async def playPause(dev: Dev):
     device = devices.register_device(dev.device)
     data = dlna.GetTransportInfo(device)
     transportStatus = data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']
-    print(transportStatus)
 
     #Press Play
     if transportStatus == 'PAUSED_PLAYBACK':
-        dlna.resume(device)
+        try:
+            dlna.resume(device)
+            return {"Playing":True}
+        except:
+            return {"Error":"Could not press play"}
 
     #Press Puase
     elif transportStatus == 'PLAYING':
-        dlna.pause(device)
+        try:
+            dlna.pause(device)
+            return {"Playing":False}
+        except:
+            return {"Error":"Could not press pause"}
 
-    return
+    return {"Error":f"Something went wrong play/Pause transport status: {transportStatus}"}
