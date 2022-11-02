@@ -21,15 +21,15 @@ Create new site config
 
 ### Plex api config
 
-"plex_baseurl":"http://some-ip:32400", -- The url/ip of your plex server
+"plex_baseurl":"http://some-ip:32400" -- The url/ip of your plex server
 
-"plex_token" : "", --get your token using these instructions https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+"plex_token" : "" --get your token using these instructions https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 
 ### File mapping config
 
-"local_movie_path" : "", --The path to your movies on the machine you are running this server on
+"local_movie_path" : "" --The path to your movies on the machine you are running this server on
 
-"plex_moviePath" :"", -- The path to your movies that the plex server is on
+"plex_moviePath" :"" -- The path to your movies that the plex server is on
 
 ### The root url of your movies served by nginx
 
@@ -46,6 +46,7 @@ Create new site config
 
 ## Run
 pipenv shell 
+
 python dev_server.py
 
 or
