@@ -17,7 +17,7 @@ Create new site config
 + Add static UI build to / url
 + Add your movies directory as static files to /movies
 
-## fill out settings.json
+## Fill out settings.json
 
 ### Plex api config
 
@@ -42,8 +42,7 @@ Create new site config
 ## Instal deps
 
 + Install pipenv
-
-pipenv install
++ pipenv install
 
 ## Run
 pipenv shell 
