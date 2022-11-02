@@ -23,21 +23,21 @@ Create new site config
 
 "plex_baseurl":"http://some-ip:32400" -- The url/ip of your plex server
 
-"plex_token" : "" --get your token using these instructions https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+"plex_token" : "-token-" --get your token using these instructions https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 
 ### File mapping config
 
-"local_movie_path" : "" --The path to your movies on the machine you are running this server on
+"local_movie_path" : "/mnt/mymovies" --The path to your movies on the machine you are running this server on
 
-"plex_moviePath" :"" -- The path to your movies that the plex server is on
+"plex_moviePath" :"/mymovies" -- The path to your movies that the plex server is on
 
 ### The root url of your movies served by nginx
 
-"nginx_file_server_url" : "someIP:somePort/movies",
+"nginx_file_server_url" : "http://someIP:somePort/movies",
 
 ### The url to your dlna device control xml
 
-"selected_device" : ""
+"selected_device" : "http://someIP:Someport/somefile.xml"
 
 ## Instal deps
 
