@@ -137,15 +137,17 @@ async def build_library():
 @repeat_every(seconds=1)
 async def pushUpdate():
     #Push updates via websockets
-    device = devices.register_device(settings["selected_device"])
-    position = dlna.getPos(device)
-    uri = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['TrackURI']
-    pos = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['RelTime']
-    TrackDuration = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['TrackDuration']
-    ts_info = dlna.GetTransportInfo(device)
-    ts_status = ts_info['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']
-    await notifier.push(str(json.dumps({'uri':uri, 'TrackDuration': TrackDuration, 'curtentPOS':pos, 'playback':ts_status})))
-
+    try:
+        device = devices.register_device(settings["selected_device"])
+        position = dlna.getPos(device)
+        uri = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['TrackURI']
+        pos = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['RelTime']
+        TrackDuration = position['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['TrackDuration']
+        ts_info = dlna.GetTransportInfo(device)
+        ts_status = ts_info['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']
+        await notifier.push(str(json.dumps({'uri':uri, 'TrackDuration': TrackDuration, 'curtentPOS':pos, 'playback':ts_status})))
+    except:
+        pass #Error is in a seperate thread
 
 @app.get("/")
 async def root():
@@ -202,33 +204,48 @@ async def play(play: Play):
 
 @app.get("/devices")
 async def findDevices():
-    device = devices.get_devices()
-    return device
+    try:
+        device = devices.get_devices()
+        return device
+    except:
+        return {"Error":"Could not find devices"}
 
 @app.post("/seek")
 async def seek(seek: Seek):
-    device = devices.register_device(seek.device)
-    dlna.seek(device, {"target": seek.target})
-    return None
+    try:
+        device = devices.register_device(seek.device)
+        dlna.seek(device, {"target": seek.target})
+        return {"seek":seek.target}
+
+    except:
+        return {"Error": f"Could not connect to device {seek.device}"}
 
 @app.get("/getPos")
 async def getPos(dev: Dev):
-    device = devices.register_device(dev.device)
-    data = dlna.getPos(device)
-    return {'curtentPOS': data['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['RelTime']}
+    try:
+        device = devices.register_device(dev.device)
+        data = dlna.getPos(device)
+        return {'curtentPOS': data['s:Envelope']['s:Body']['u:GetPositionInfoResponse']['RelTime']}
+    except:
+        return {"Error": f"Could not connect to device {dev.device}"}
 
 @app.get('/transportStatus')
 async def getTransportStatus(dev: Dev):
-    device = devices.register_device(dev.device)
-    data = dlna.GetTransportInfo(device)
-    return {'transportStatus': data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']}
+    try:
+        device = devices.register_device(dev.device)
+        data = dlna.GetTransportInfo(device)
+        return {'transportStatus': data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']}
+    except:
+        return {"Error": f"Could not connect to device {dev.device}"}
 
 @app.post('/playPause')
 async def playPause(dev: Dev):
-    device = devices.register_device(dev.device)
-    data = dlna.GetTransportInfo(device)
-    transportStatus = data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']
-
+    try:
+        device = devices.register_device(dev.device)
+        data = dlna.GetTransportInfo(device)
+        transportStatus = data['s:Envelope']['s:Body']['u:GetTransportInfoResponse']['CurrentTransportState']
+    except:
+        return {"Error": f"Could not connect to device {dev.device}"}
     #Press Play
     if transportStatus == 'PAUSED_PLAYBACK':
         try:
